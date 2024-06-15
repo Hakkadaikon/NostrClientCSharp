@@ -1,0 +1,2 @@
+# NostrClientCSharp
+Nostr CSharp Client 
