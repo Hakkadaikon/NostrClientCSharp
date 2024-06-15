@@ -1,4 +1,6 @@
 ﻿@page "/counter"
+@using System.Net.WebSockets;
+@using System.Text;
 
 <h1>Counter</h1>
 
@@ -6,11 +8,63 @@
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
+@foreach(var rawEvent in rawEventList)
+{
+    <p>@rawEvent</p>
+})
+
+
 @code {
     private int currentCount = 0;
+    private Queue<string> rawEventList = new();
 
-    private void IncrementCount()
+    private async Task IncrementCount()
     {
+        Uri uri = new("wss://yabu.me/");
+
+        using ClientWebSocket ws = new();
+        await ws.ConnectAsync(uri, default);
+
+        var req = "[\"REQ\",\"_\",{\"kinds\": [1],\"limit\": 10}]";
+
+        Console.WriteLine("< " + req);
+        await ws.SendAsync(Encoding.UTF8.GetBytes(req), WebSocketMessageType.Text, true, default);
+
+        var buffer = new byte[1024];
+        while (true)
+        {
+            ArraySegment<byte> segment = new(buffer);
+            var result = await ws.ReceiveAsync(segment, default);
+
+            if (result.MessageType == WebSocketMessageType.Close)
+            {
+                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "OK", default);
+                return;
+            }
+
+            var count = result.Count;
+            while (!result.EndOfMessage)
+            {
+                if (count >= buffer.Length)
+                {
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "That's too long", default);
+                    return;
+                }
+
+                segment = new ArraySegment<byte>(buffer, count, buffer.Length - count);
+                result = await ws.ReceiveAsync(segment, default);
+                count += result.Count;
+            }
+
+            var message = Encoding.UTF8.GetString(buffer, 0, count);
+            Console.WriteLine("> " + message);
+
+            rawEventList.Enqueue(message);
+
+            //TODO: 一旦、EOSEが含まれるメッセージが来たら終了する
+            if (message.Contains("EOSE")) break;
+        }
+
         currentCount++;
     }
 }
