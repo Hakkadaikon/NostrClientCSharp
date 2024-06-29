@@ -1,23 +1,39 @@
 ﻿@page "/counter"
 @using System.Net.WebSockets;
 @using System.Text;
+@using System.Text.Json.Nodes;
 
 <h1>Counter</h1>
 
-<p role="status">Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
-
-@foreach(var rawEvent in rawEventList)
+@if (nostrEventLists == null || nostrEventLists.Count <= 0)
 {
-    <p>@rawEvent</p>
+    <p><em>Loading...</em></p>
+}
+else
+{
+<table class="table">
+    <thead>
+        <tr>
+            <th>Pubkey</th>
+            <th>Contnent</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var nostrEvent in nostrEventLists)
+        {
+            <tr>
+                <td width="50">@nostrEvent.name</td>
+                <td width="200">@nostrEvent.content</td>
+            </tr>
+        }
+    </tbody>
+</table>
 }
 
 @code {
-    private int currentCount = 0;
-    private Queue<string> rawEventList = new();
+    private List<NostrEvent> nostrEventLists = new();
 
-    private async Task IncrementCount()
+    protected override async Task OnInitializedAsync()
     {
         Uri uri = new("wss://yabu.me/");
 
@@ -30,40 +46,62 @@
         await ws.SendAsync(Encoding.UTF8.GetBytes(req), WebSocketMessageType.Text, true, default);
 
         var buffer = new byte[1024];
-        while (true)
+
+        try
         {
-            ArraySegment<byte> segment = new(buffer);
-            var result = await ws.ReceiveAsync(segment, default);
-
-            if (result.MessageType == WebSocketMessageType.Close)
+            while (true)
             {
-                await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "OK", default);
-                return;
-            }
+                ArraySegment<byte> segment = new(buffer);
+                var result = await ws.ReceiveAsync(segment, default);
 
-            var count = result.Count;
-            while (!result.EndOfMessage)
-            {
-                if (count >= buffer.Length)
+                if (result.MessageType == WebSocketMessageType.Close)
                 {
-                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "That's too long", default);
+                    await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "OK", default);
                     return;
                 }
 
-                segment = new ArraySegment<byte>(buffer, count, buffer.Length - count);
-                result = await ws.ReceiveAsync(segment, default);
-                count += result.Count;
+                var count = result.Count;
+                while (!result.EndOfMessage)
+                {
+                    if (count >= buffer.Length)
+                    {
+                        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "That's too long", default);
+                        return;
+                    }
+
+                    segment = new ArraySegment<byte>(buffer, count, buffer.Length - count);
+                    result = await ws.ReceiveAsync(segment, default);
+                    count += result.Count;
+                }
+
+                var message = Encoding.UTF8.GetString(buffer, 0, count);
+                // Console.WriteLine("> " + message);
+                var node = JsonNode.Parse(message);
+                var nodes = node.AsArray();
+                if (nodes.Count < 3 || node[0].ToString() != "EVENT")
+                {
+                    return;
+                }
+
+                var ev = nodes[2];
+                var content = ev["content"].ToString();
+                var name = ev["pubkey"].ToString();
+
+                nostrEventLists.Add(new NostrEvent(name, content));
+
+                //TODO: 一旦、EOSEが含まれるメッセージが来たら終了する
+                if (message.Contains("EOSE")) return;
             }
-
-            var message = Encoding.UTF8.GetString(buffer, 0, count);
-            Console.WriteLine("> " + message);
-
-            rawEventList.Enqueue(message);
-
-            //TODO: 一旦、EOSEが含まれるメッセージが来たら終了する
-            if (message.Contains("EOSE")) break;
         }
+        catch(Exception ex)
+        {
+            return; 
+        }
+    }
 
-        currentCount++;
+    private class NostrEvent(string _name, string _content)
+    {
+        public string name = _name;
+        public string content = _content;
     }
 }

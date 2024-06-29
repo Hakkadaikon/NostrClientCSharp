@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
-        <TargetFrameworks>net8.0-android;net8.0-ios;net8.0-maccatalyst</TargetFrameworks>
+        <TargetFrameworks>net8.0-maccatalyst</TargetFrameworks>
         <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.19041.0</TargetFrameworks>
         <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
         <!-- <TargetFrameworks>$(TargetFrameworks);net8.0-tizen</TargetFrameworks> -->
@@ -37,6 +37,28 @@
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+        <PublishAot>False</PublishAot>
+        <PublishTrimmed>False</PublishTrimmed>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-maccatalyst|AnyCPU'">
+      <IsPublishable>False</IsPublishable>
+      <Deterministic>True</Deterministic>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-windows10.0.19041.0|AnyCPU'">
+      <IsPublishable>False</IsPublishable>
+      <Deterministic>True</Deterministic>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-maccatalyst|AnyCPU'">
+      <IsPublishable>False</IsPublishable>
+      <Deterministic>True</Deterministic>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-windows10.0.19041.0|AnyCPU'">
+      <IsPublishable>False</IsPublishable>
+      <Deterministic>True</Deterministic>
     </PropertyGroup>
 
     <ItemGroup>
@@ -55,6 +77,18 @@
 
         <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
         <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <BundleResource Remove="Platforms\MacCatalyst\**" />
+      <Compile Remove="Platforms\MacCatalyst\**" />
+      <Content Remove="Platforms\MacCatalyst\**" />
+      <EmbeddedResource Remove="Platforms\MacCatalyst\**" />
+      <ImageAsset Remove="Platforms\MacCatalyst\**" />
+      <InterfaceDefinition Remove="Platforms\MacCatalyst\**" />
+      <MauiXaml Remove="Platforms\MacCatalyst\**" />
+      <None Remove="Platforms\MacCatalyst\**" />
+      <SceneKitAsset Remove="Platforms\MacCatalyst\**" />
     </ItemGroup>
 
     <ItemGroup>
