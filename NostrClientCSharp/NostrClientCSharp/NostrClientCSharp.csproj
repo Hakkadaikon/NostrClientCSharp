@@ -6,13 +6,6 @@
         <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
         <!-- <TargetFrameworks>$(TargetFrameworks);net8.0-tizen</TargetFrameworks> -->
 
-        <!-- Note for MacCatalyst:
-            The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
-            When specifying both architectures, use the plural <RuntimeIdentifiers> instead of the singular <RuntimeIdentifier>.
-            The Mac App Store will NOT accept apps with ONLY maccatalyst-arm64 indicated;
-            either BOTH runtimes must be indicated or ONLY macatalyst-x64. -->
-        <!-- For example: <RuntimeIdentifiers>maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers> -->
-
         <OutputType>Exe</OutputType>
         <RootNamespace>NostrClientCSharp</RootNamespace>
         <UseMaui>true</UseMaui>
@@ -80,15 +73,16 @@
     </ItemGroup>
 
     <ItemGroup>
-      <BundleResource Remove="Platforms\MacCatalyst\**" />
-      <Compile Remove="Platforms\MacCatalyst\**" />
-      <Content Remove="Platforms\MacCatalyst\**" />
-      <EmbeddedResource Remove="Platforms\MacCatalyst\**" />
-      <ImageAsset Remove="Platforms\MacCatalyst\**" />
-      <InterfaceDefinition Remove="Platforms\MacCatalyst\**" />
-      <MauiXaml Remove="Platforms\MacCatalyst\**" />
-      <None Remove="Platforms\MacCatalyst\**" />
-      <SceneKitAsset Remove="Platforms\MacCatalyst\**" />
+      <Compile Remove="Platforms\iOS\**" />
+      <Compile Remove="Platforms\Tizen\**" />
+      <Content Remove="Platforms\iOS\**" />
+      <Content Remove="Platforms\Tizen\**" />
+      <EmbeddedResource Remove="Platforms\iOS\**" />
+      <EmbeddedResource Remove="Platforms\Tizen\**" />
+      <MauiXaml Remove="Platforms\iOS\**" />
+      <MauiXaml Remove="Platforms\Tizen\**" />
+      <None Remove="Platforms\iOS\**" />
+      <None Remove="Platforms\Tizen\**" />
     </ItemGroup>
 
     <ItemGroup>
