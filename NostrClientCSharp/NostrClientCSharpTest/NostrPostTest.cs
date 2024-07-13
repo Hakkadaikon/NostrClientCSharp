@@ -5,7 +5,7 @@ using System.Text;
 namespace NostrClientCSharpTest
 {
     [TestClass]
-    public class UnitTest1
+    public class NostrPostTest
     {
         private static string CreateNostrPost(byte[] publicKey, byte[] privateKey, string message)
         {
